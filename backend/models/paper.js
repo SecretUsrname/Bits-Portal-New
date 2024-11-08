@@ -8,7 +8,7 @@ const PaperSchema = mongoose.Schema(
             required: true, 
 
         },
-        authors:{
+        author:{
             type:[String],
             required:true,
         },
@@ -18,12 +18,20 @@ const PaperSchema = mongoose.Schema(
         },
         publisher:{
             type:String,
-            required:true,
         }, 
         year:{
             type:Number,
             required:true,
-        }
+        },
+        journal:{
+            type:String,
+        },
+        volume:{
+            type:String,
+        },
+        pages:{
+            type:Number,
+        },
     },
 
     {
