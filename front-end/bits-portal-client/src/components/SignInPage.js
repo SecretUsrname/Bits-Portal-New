@@ -12,7 +12,7 @@ const SignInPage = () => {
     console.log('Google Login Success:', credentialResponse);
 
     // Here, you can handle the credential and send it to your server if needed
-
+    login();
     // Redirect to /users after successful login
     navigate('/users');
   };
