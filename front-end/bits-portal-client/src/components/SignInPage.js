@@ -81,6 +81,10 @@ const SignInPage = () => {
       console.log("Error during email check:", error);
     }
 
+    // Here, you can handle the credential and send it to your server if needed
+    login();
+    // Redirect to /users after successful login
+    navigate('/users');
   };
 
   const handleLoginError = () => {
