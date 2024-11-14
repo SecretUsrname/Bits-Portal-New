@@ -1,5 +1,6 @@
 
 import mongoose from 'mongoose';
+import User from './user.js';
 
 const PaperSchema = mongoose.Schema(
     {
@@ -9,7 +10,7 @@ const PaperSchema = mongoose.Schema(
 
         },
         author:{
-            type:[String],
+            type:String,
             required:true,
         },
         DOI:{
@@ -32,6 +33,14 @@ const PaperSchema = mongoose.Schema(
         pages:{
             type:Number,
         },
+        creator:{
+            type: String,
+            ref: User,
+        },
+        taggers:{
+            type: [String],
+            ref: User,
+        }
     },
 
     {

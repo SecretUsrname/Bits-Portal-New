@@ -36,7 +36,8 @@ def extract_bib_info(file_path):
             'journal': entry.get('journal', 'N/A'),
             'volume': entry.get('volume', 'N/A'),
             'pages': entry.get('pages', 'N/A'),
-            'DOI' : entry.get('doi', 'N/A')
+            'DOI' : entry.get('doi', 'N/A'),
+            'publisher': entry.get('publisher', 'N/A')
         }
         citations.append(citation)
     return citations[0]
@@ -55,7 +56,8 @@ def extract_json_info(file_path):
             'journal': entry.get('journal', 'N/A'),
             'volume': entry.get('volume', 'N/A'),
             'pages': entry.get('pages', 'N/A'),
-            'DOI' : entry.get('doi', 'N/A')
+            'DOI' : entry.get('doi', 'N/A'),
+            'publisher': entry.get('publisher', 'N/A')
         }
         citations.append(citation)
     return citations[0]
@@ -74,27 +76,41 @@ def extract_xml_info(file_path):
             'journal': entry.find("journal").text if entry.find("journal") is not None else 'N/A',
             'volume': entry.find("volume").text if entry.find("volume") is not None else 'N/A',
             'pages': entry.find("pages").text if entry.find("pages") is not None else 'N/A',
-            'D.O.I':  entry.find("doi").text if entry.find("doi") is not None else 'N/A'
+            'D.O.I':  entry.find("doi").text if entry.find("doi") is not None else 'N/A',
+            'publisher':  entry.find("publisher").text if entry.find("publisher") is not None else 'N/A'
         }
         citations.append(citation)
     return citations[0]
 
 def extract_ris_info(file_path):
-    with open(file_path, 'r') as ris_file:
-        entries = rispy.load(ris_file)
-
     citations = []
-    for entry in entries:
-        citation = {
-            'author': entry.get('AU', 'N/A'),
-            'title': entry.get('TI', 'N/A'),
-            'year': entry.get('PY', 'N/A'),
-            'journal': entry.get('JO', 'N/A'),
-            'volume': entry.get('VL', 'N/A'),
-            'pages': entry.get('SP', 'N/A'),
-            'DOI': entry.get('DO', 'N/A')
-        }
+    citation = {}
+    with open(file_path, 'r') as ris_file:
+        for line in ris_file:
+            if line.startswith('A1'):  # Author
+                citation['author'] = line[6:].strip()
+            elif line.startswith('T1'):  # Title
+                citation['title'] = line[6:].strip()
+            elif line.startswith('Y1'):  # Year
+                citation['year'] = line[6:].strip()
+            elif line.startswith('JO'):  # Journal
+                citation['journal'] = line[6:].strip()
+            elif line.startswith('VL'):  # Volume
+                citation['volume'] = line[6:].strip()
+            elif line.startswith('SP'):  # Pages
+                citation['pages'] = line[6:].strip()
+            elif line.startswith('DO'):  # DOI
+                citation['DOI'] = line[6:].strip()
+            elif line.startswith('PB'):  # publication
+                citation['publisher'] = line[6:].strip()
+            elif line.strip() == '':  # Empty line denotes end of a citation
+                if citation:
+                    citations.append(citation)
+                    citation = {}  # Reset for the next entry
+    # Add the last citation if not already added
+    if citation:
         citations.append(citation)
+
     return citations[0]
 
 def extract_enw_info(file_path):
@@ -117,6 +133,8 @@ def extract_enw_info(file_path):
                 citation['pages'] = line[3:].strip()
             elif line.startswith('%R'):  # DOI
                 citation['DOI'] = line[3:].strip()
+            elif line.startswith('%I'):  # publication
+                citation['publisher'] = line[3:].strip()
             elif line.strip() == '':  # Empty line denotes end of a citation
                 if citation:
                     citations.append(citation)

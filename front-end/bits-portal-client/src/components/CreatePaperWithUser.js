@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom';
 const CreatePaperWithUser = () => {
-  const [userId, setUserId] = useState('');
-  const [userIdSubmitted, setUserIdSubmitted] = useState(false);
+  const navigator = useNavigate();
   const [paperDetails, setPaperDetails] = useState({
     title: '',
     author: '',
@@ -14,7 +13,11 @@ const CreatePaperWithUser = () => {
   });
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
-
+  const id = localStorage.getItem('id');
+  console.log(`id: ${id}`);
+  const goback = () => {
+    navigator('/');
+  } 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaperDetails({
@@ -27,19 +30,10 @@ const CreatePaperWithUser = () => {
     setFile(e.target.files[0]);
   };
 
-  const handleUserIdSubmit = (e) => {
-    e.preventDefault();
-    if (userId) {
-      setUserIdSubmitted(true);
-    } else {
-      setMessage("Please enter a user ID.");
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`http://localhost:3000/${userId}/paper`, paperDetails);
+      const response = await axios.post(`http://localhost:3000/${id}/paper`, paperDetails);
       setMessage('Paper created successfully!');
       setPaperDetails({
         title: '',
@@ -88,27 +82,17 @@ const CreatePaperWithUser = () => {
 
   return (
     <div className="flex flex-col items-center p-8 bg-gray-100 min-h-screen">
+      <button
+        className="w-half py-3 px-6 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 align-right"
+        type="button"
+        onClick={ () => goback() }
+      >
+          Back
+      </button>
+      <br></br>
+      <br></br>
       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">Create Paper</h2>
-
-        {!userIdSubmitted ? (
-          <form onSubmit={handleUserIdSubmit} className="flex flex-col items-center">
-            <input
-              type="text"
-              placeholder="Enter User ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              required
-              className="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-              Submit User ID
-            </button>
-          </form>
-        ) : (
-          <>
-            <h3 className="text-lg font-semibold text-gray-700 mt-4">User ID: {userId}</h3>
-
             <form onSubmit={handleSubmit} className="flex flex-col space-y-4 mt-4">
               <input
                 type="text"
@@ -181,8 +165,6 @@ const CreatePaperWithUser = () => {
                 Upload File
               </button>
             </form>
-          </>
-        )}
 
         {message && <p className="text-center mt-4 text-red-600">{message}</p>}
       </div>

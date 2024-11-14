@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const AllPapers = () => {
     const [papers, setPapers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedPaper, setSelectedPaper] = useState(null);  // State to store the selected paper for modal
+    const navigate = useNavigate();
 
     // Fetch all papers from the API
     useEffect(() => {
@@ -33,6 +35,10 @@ const AllPapers = () => {
         setSelectedPaper(null);
     };
 
+    const goback = () => {
+        navigate('/home');
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen text-xl text-gray-500">
@@ -51,15 +57,28 @@ const AllPapers = () => {
 
     return (
         <div className="container mx-auto p-4">
+            <button
+            className="w-auto py-2 px-6 mb-4 bg-red-500 text-white font-semibold rounded-full shadow-lg hover:bg-red-600 transition duration-200 ease-in-out self-end"
+            type="button"
+            onClick={() => goback()}
+            >
+            ← Back
+            </button>
+
             <h1 className="text-4xl font-semibold text-center text-gray-800 mb-8">All Papers</h1>
             
             <div className="overflow-x-auto shadow-lg rounded-xl mb-6 bg-white">
                 <table className="min-w-full bg-white table-auto border-separate border-spacing-2">
                     <thead>
                         <tr className="text-left text-sm font-semibold text-gray-700 bg-indigo-600">
-                            <th className="px-6 py-3 text-white">DOI</th>
-                            <th className="px-6 py-3 text-white">Title</th>
                             <th className="px-6 py-3 text-white">Author</th>
+                            <th className="px-6 py-3 text-white">Title</th>
+                            <th className="px-6 py-3 text-white">Year</th>
+                            <th className="px-6 py-3 text-white">Journal</th>
+                            <th className="px-6 py-3 text-white">Volume</th>
+                            <th className="px-6 py-3 text-white">pages</th>
+                            <th className="px-6 py-3 text-white">DOI</th>
+                            
                         </tr>
                     </thead>
                     <tbody>
@@ -70,9 +89,13 @@ const AllPapers = () => {
                                     className="hover:bg-indigo-50 cursor-pointer transition duration-200 ease-in-out"
                                     onClick={() => handleRowClick(paper)}  // On row click, show paper details
                                 >
-                                    <td className="px-6 py-4 text-sm text-gray-800 border-b">{paper.DOI}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.title}</td>
                                     <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.author}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.title}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.year}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.journal}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.volume}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.pages}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-800 border-b">{paper.DOI}</td>
                                 </tr>
                             ))
                         ) : (
