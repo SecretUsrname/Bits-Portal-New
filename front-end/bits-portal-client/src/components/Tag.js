@@ -107,7 +107,7 @@ const Tag = () => {
                 {selectedUsers.map((user) => (
                   <span
                     key={user.id}
-                    className="flex items-center bg-indigo-500 text-white px-3 py-1 rounded-full text-sm"
+                    className="flex items-center bg-white text-white px-3 py-1 rounded-full text-sm"
                   >
                     {user.name}
                     <button
