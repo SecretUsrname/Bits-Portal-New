@@ -5,14 +5,14 @@ import { useNavigate } from 'react-router-dom';
 function AddAdmin() {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState(null);
-    const [newUser, setNewUser] = useState({ name: '', email: '' });
+    const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Admin' });
     const [successMessage, setSuccessMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
     const navigate = useNavigate();
 
     // Fetch users when the component mounts
     useEffect(() => {
-        axios.get('http://localhost:3000/allAdmin')
+        axios.get('http://localhost:3000/allAdmins')
             .then(response => {
                 setUsers(response.data); // Set the fetched users to state
             })
@@ -24,7 +24,7 @@ function AddAdmin() {
 
     // Handle deleting a user
     const handleDelete = (userId) => {
-        axios.delete(`http://localhost:3000/admin/${userId}`)
+        axios.delete(`http://localhost:3000/user/${userId}`)
             .then(response => {
                 alert(response.data.message); // Show success message
                 setUsers(users.filter(user => user._id !== userId)); // Remove deleted user from list
@@ -43,7 +43,7 @@ function AddAdmin() {
             return;
         }
 
-        axios.post('http://localhost:3000/admin', newUser)
+        axios.post('http://localhost:3000/user', newUser)
             .then(response => {
                 setUsers([...users, response.data]); // Add new user to the list
                 setNewUser({ name: '', email: '' }); // Reset form fields
