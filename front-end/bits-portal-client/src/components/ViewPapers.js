@@ -4,9 +4,17 @@ import { useNavigate } from 'react-router-dom';
 
 const AllPapers = () => {
     const [papers, setPapers] = useState([]);
+    const [filteredPapers, setFilteredPapers] = useState([]); // For displaying filtered results
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedPaper, setSelectedPaper] = useState(null);  // State to store the selected paper for modal
+    const [selectedPaper, setSelectedPaper] = useState(null); // State to store the selected paper for modal
+    const [searchTerm, setSearchTerm] = useState(''); // Search term
+    const [filters, setFilters] = useState({
+        year: '',
+        journal: '',
+        author: '',
+    }); // Filter options
+
     const navigate = useNavigate();
 
     // Fetch all papers from the API
@@ -15,6 +23,7 @@ const AllPapers = () => {
             try {
                 const response = await axios.get('http://localhost:3000/allpapers');
                 setPapers(response.data);
+                setFilteredPapers(response.data); // Set initial filtered data
             } catch (err) {
                 setError('Error fetching papers');
             } finally {
@@ -24,6 +33,29 @@ const AllPapers = () => {
 
         fetchPapers();
     }, []);
+
+    // Filter and search logic
+    useEffect(() => {
+        const sortAndFilterPapers = () => {
+            const filtered = papers.filter((paper) => {
+                const matchesSearchTerm =
+                    paper.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    paper.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    paper.journal.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    paper.DOI.toLowerCase().includes(searchTerm.toLowerCase());
+
+                const matchesYear = filters.year ? paper.year === filters.year : true;
+                const matchesJournal = filters.journal ? paper.journal === filters.journal : true;
+                const matchesAuthor = filters.author ? paper.author.toLowerCase().includes(filters.author.toLowerCase()) : true;
+
+                return matchesSearchTerm && matchesYear && matchesJournal && matchesAuthor;
+            });
+
+            setFilteredPapers(filtered);
+        };
+
+        sortAndFilterPapers();
+    }, [searchTerm, filters, papers]);
 
     // Handle row click to show paper details in modal
     const handleRowClick = (paper) => {
@@ -37,7 +69,7 @@ const AllPapers = () => {
 
     const goback = () => {
         navigate('/home');
-    }
+    };
 
     if (loading) {
         return (
@@ -58,15 +90,60 @@ const AllPapers = () => {
     return (
         <div className="container mx-auto p-4">
             <button
-            className="w-auto py-2 px-6 mb-4 bg-red-500 text-white font-semibold rounded-full shadow-lg hover:bg-red-600 transition duration-200 ease-in-out self-end"
-            type="button"
-            onClick={() => goback()}
+                className="w-auto py-2 px-6 mb-4 bg-red-500 text-white font-semibold rounded-full shadow-lg hover:bg-red-600 transition duration-200 ease-in-out self-end"
+                type="button"
+                onClick={() => goback()}
             >
-            ← Back
+                ← Back
             </button>
 
-            <h1 className="text-4xl font-semibold text-center text-gray-800 mb-8">All Papers</h1>
-            
+            <div className="flex justify-between items-center mb-4">
+                <h1 className="text-4xl font-semibold text-gray-800">All Papers</h1>
+                <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-300"
+                />
+            </div>
+
+            <div className="mb-4 flex gap-4">
+                <select
+                    className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-300"
+                    value={filters.year}
+                    onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+                >
+                    <option value="">All Years</option>
+                    {[...new Set(papers.map((paper) => paper.year))].map((year) => (
+                        <option key={year} value={year}>
+                            {year}
+                        </option>
+                    ))}
+                </select>
+
+                <select
+                    className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-300"
+                    value={filters.journal}
+                    onChange={(e) => setFilters({ ...filters, journal: e.target.value })}
+                >
+                    <option value="">All Journals</option>
+                    {[...new Set(papers.map((paper) => paper.journal))].map((journal) => (
+                        <option key={journal} value={journal}>
+                            {journal}
+                        </option>
+                    ))}
+                </select>
+
+                <input
+                    type="text"
+                    placeholder="Filter by Author"
+                    value={filters.author}
+                    onChange={(e) => setFilters({ ...filters, author: e.target.value })}
+                    className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-300"
+                />
+            </div>
+
             <div className="overflow-x-auto shadow-lg rounded-xl mb-6 bg-white">
                 <table className="min-w-full bg-white table-auto border-separate border-spacing-2">
                     <thead>
@@ -76,18 +153,17 @@ const AllPapers = () => {
                             <th className="px-6 py-3 text-white">Year</th>
                             <th className="px-6 py-3 text-white">Journal</th>
                             <th className="px-6 py-3 text-white">Volume</th>
-                            <th className="px-6 py-3 text-white">pages</th>
+                            <th className="px-6 py-3 text-white">Pages</th>
                             <th className="px-6 py-3 text-white">DOI</th>
-                            
                         </tr>
                     </thead>
                     <tbody>
-                        {papers.length > 0 ? (
-                            papers.map((paper) => (
+                        {filteredPapers.length > 0 ? (
+                            filteredPapers.map((paper) => (
                                 <tr
                                     key={paper._id}
                                     className="hover:bg-indigo-50 cursor-pointer transition duration-200 ease-in-out"
-                                    onClick={() => handleRowClick(paper)}  // On row click, show paper details
+                                    onClick={() => handleRowClick(paper)} // On row click, show paper details
                                 >
                                     <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.author}</td>
                                     <td className="px-6 py-4 text-sm text-gray-700 border-b">{paper.title}</td>
@@ -100,14 +176,15 @@ const AllPapers = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="3" className="px-6 py-4 text-center text-gray-500">No papers available.</td>
+                                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                                    No papers available.
+                                </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Modal to show detailed paper information */}
             {selectedPaper && (
                 <div className="fixed inset-0 z-10 flex items-center justify-center bg-gray-800 bg-opacity-50">
                     <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2">
@@ -125,7 +202,7 @@ const AllPapers = () => {
                         <div className="mt-6 flex justify-end">
                             <button
                                 className="px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition duration-200"
-                                onClick={closeModal}  // Close the modal
+                                onClick={closeModal} // Close the modal
                             >
                                 Close
                             </button>
