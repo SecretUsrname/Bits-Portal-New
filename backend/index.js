@@ -33,105 +33,108 @@ const storage = multer.diskStorage({
 // Set up multer for file handling
 const upload = multer({ storage });
 
-//Creating new user. 
-app.post('/user',async(req, res)=> {
+// Creating a new user or admin
+app.post('/user', async (req, res) => {
     try {
-        const { email, name } = req.body;
-        const user = await User.create({ name, email});
+        const { email, name, role, PSR, DOB, PhoneNum, chamberNum, Dept } = req.body;
+
+        // Validate role
+        if (!['User', 'Admin'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role. Must be "User" or "Admin".' });
+        }
+
+        // Create user/admin based on role
+        const user = await User.create({ email, name, role, PSR, DOB, PhoneNum, chamberNum, Dept });
         res.status(200).json(user);
-      } catch (error) {
+    } catch (error) {
         res.status(500).json({ message: error.message });
-      }
+    }
 });
 
-app.post('/admin',async(req, res)=> {
-    try {
-        const { email, name } = req.body;
-        const admin = await Admin.create({ name, email});
-        res.status(200).json(admin);
-      } catch (error) {
-        res.status(500).json({ message: error.message });
-      }
-});
-
-//getting user details by email
+// Getting user/admin details by email
 app.get('/user/:email', async (req, res) => {
-    try{
-        const {email} = req.params;
+    try {
+        const { email } = req.params;
         const user = await User.findOne({ email });
-        if(!user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (!user) {
+            return res.status(404).json({ message: 'User/Admin not found' });
         }
         return res.status(200).json(user);
-    }
-    catch (error){
+    } catch (error) {
         res.status(404).json({ message: error.message });
     }
 });
 
+// Getting user/admin details by ID
+app.get('/user/byid/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User/Admin not found' });
+        }
+        return res.status(200).json(user);
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+});
 
+// Getting only the ID of a user/admin by email
 app.get('/user_id/:email', async (req, res) => {
-    try{
-        const {email} = req.params;
+    try {
+        const { email } = req.params;
         const user = await User.findOne({ email });
-        if(!user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (!user) {
+            return res.status(404).json({ message: 'User/Admin not found' });
         }
         return res.status(200).json(user._id);
-    }
-    catch (error){
+    } catch (error) {
         res.status(404).json({ message: error.message });
     }
 });
 
-//Deleting user by ID
+// Deleting a user/admin by ID
 app.delete('/user/:id', async (req, res) => {
     try {
-        const { id } = req.params;  // Get the user ID from the URL parameter
-        const user = await User.findByIdAndDelete(id);  // Find and delete the user
+        const { id } = req.params;
+        const user = await User.findByIdAndDelete(id);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User/Admin not found' });
         }
-        res.status(200).json({ message: 'User deleted successfully' });
+        res.status(200).json({ message: 'User/Admin deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-//Deleting admin by id
-
-app.delete('/admin/:id', async (req, res) => {
+// List of all users
+app.get('/allUsers', async (req, res) => {
     try {
-        const { id } = req.params;  // Get the user ID from the URL parameter
-        const user = await Admin.findByIdAndDelete(id);  // Find and delete the user
-        if (!user) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-        res.status(200).json({ message: 'Admin deleted successfully' });
+        const users = await User.find({ role: 'User' });
+        //console.log(users);
+        res.status(200).json(users);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(404).json({ message: 'No users found' });
     }
 });
 
-//List of all users
-app.get('/alluser', async (req, res) => {
-    try{
-        const user = await User.find({});
-        res.status(200).json(user);
-    }
-    catch(error){
-        res.status(404).json({message: 'NO USERS EXIST'});      
+// List of all admins
+app.get('/allAdmins', async (req, res) => {
+    try {
+        const admins = await User.find({ role: 'Admin' });
+        res.status(200).json(admins);
+    } catch (error) {
+        res.status(404).json({ message: 'No admins found' });
     }
 });
 
-//List of all Admin
-app.get('/allAdmin', async (req, res) => {
-    try{
-        const admin = await Admin.find({});
-        res.status(200).json(admin);
-    }
-    catch(error){
-        res.status(404).json({message: 'NO ADMINS EXIST'});      
+app.get('/allpeople',async (req, res) => {
+    try {
+        const people = await User.find();
+        console.log(people);
+        res.status(200).json(people);
+    } catch (error) {
+        res.status(404).json({ message: 'No people found' });
     }
 });
 
@@ -306,42 +309,65 @@ app.post('/upload', upload.single('file'), (req, res) => {
 });
 
 //login checking
-// Login checking for user
-app.get('/login/user/:email', async (req, res) => {
+// Login checking for user or admin
+app.get('/login/:role/:email', async (req, res) => {
     try {
-        const { email } = req.params; // Retrieve email from URL
-        const user = await User.findOne({ email });
+        const { role, email } = req.params; // Retrieve role and email from URL
+
+        // Validate role
+        if (!['User', 'Admin'].includes(role)) {
+            return res.status(400).json({ authorize: 'NO', message: 'Invalid role' });
+        }
+
+        // Find user/admin by email and role
+        const user = await User.findOne({ email, role });
 
         if (!user) {
-            return res.status(404).json({ authorize: 'NO' }); // User not found
+            return res.status(404).json({ authorize: 'NO' }); // User/Admin not found
         }
 
-        // User found, return authorized response
+        // User/Admin found, return authorized response
         res.status(200).json({ authorize: 'YES' });
     } catch (error) {
-        console.error("Error checking user:", error);
+        console.error("Error checking login:", error);
         res.status(500).json({ authorize: 'NO' });
     }
 });
 
 
-// Admin login checking
-app.get('/login/admin/:email', async(req, res) => {
-    try {
-        const { email } = req.params; // Retrieve email from URL
-        const admin = await Admin.findOne({ email });
-        if (!admin) {
-            return res.status(404).json({ authorize: 'NO' }); // User not found
-        }
 
-        // User found, return authorized response
-        res.status(200).json({ authorize: 'YES' });
-    } catch (error) {
-        console.error("Error checking user:", error);
-        res.status(500).json({ authorize: 'NO' });
+app.get('/:userid/:paperid/tagged/accepted', async(req, res) => {
+    try{
+        const {userid, paperid} = req.params;
+        const user = await User.findById(userid);
+        const paper = await Paper.findById(paperid);
+        const DOI = paper.DOI;
+        user.tagged_DOI = user.tagged_DOI.filter(item => item !== DOI);
+        user.DOI.push(DOI);
+        await user.save();   
+        res.status(200).json({ accepted: 'OK'});
     }
-});
+    catch(error){
+        console.error(error);
+        res.status(500).json({ accepted: 'NO' });
+    }
+})
 
+app.get('/:userid/:paperid/tagged/declined', async(req, res) => {
+    try{
+        const {userid, paperid} = req.params;
+        const user = await User.findById(userid);
+        const paper = await Paper.findById(paperid);
+        const DOI = paper.DOI;
+        user.tagged_DOI = user.tagged_DOI.filter(item => item !== DOI);
+        await user.save();   
+        res.status(200).json({ accepted: 'NO'});
+    }
+    catch(error){
+        console.error(error);
+        res.status(500).json({ accepted: 'Error' });
+    }
+})
 
 mongoose.connect("mongodb+srv://f20220012:yNXnhFCr1niFyTiM@cluster0.gyzwh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
     .then(() => {
