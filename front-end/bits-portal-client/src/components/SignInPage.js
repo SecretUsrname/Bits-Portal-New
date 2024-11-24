@@ -1,12 +1,11 @@
 // src/components/SignInPage.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
-import { useEffect } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 const SignInPage = () => {
@@ -15,76 +14,50 @@ const SignInPage = () => {
   const { loginAdmin, isAuthenticatedAdmin } = useAdminAuth();
   const { userId, uid } = useUser();
 
-  console.log(isAuthenticated)
+  // Check if the user is already authenticated and redirect accordingly
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("User is authenticated, redirecting to home page");
-      navigate('/');
+      console.log("User is authenticated, redirecting to user dashboard");
+      navigate('/'); // User dashboard
+    } else if (isAuthenticatedAdmin) {
+      console.log("Admin is authenticated, redirecting to admin dashboard");
+      navigate('/home'); // Admin dashboard
     } else {
       console.log("User is not authenticated");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isAuthenticatedAdmin, navigate]);
 
-  useEffect(() => {
-    if (isAuthenticatedAdmin) {
-      console.log("User is authenticated, redirecting to home page");
-      navigate('/home');
-    } else {
-      console.log("User is not authenticated");
-    }
-  }, [isAuthenticatedAdmin, navigate]);
-
-  const handleLoginSuccess = async(credentialResponse) => {
+  const handleLoginSuccess = async (credentialResponse, role) => {
     try {
       const token = credentialResponse.credential;
-      const userInfo = jwtDecode(token); // Use jwtDecode
+      const userInfo = jwtDecode(token); // Decode JWT to get user info
       const userEmail = userInfo.email;
-      const response = await axios.get(`http://localhost:3000/login/user/${userEmail}`);
-      
+      const userImage = userInfo.picture;
+      console.log("User Image:", userImage);
+      localStorage.setItem("DP", userImage);
+
+      // Call the role-based login endpoint
+      const response = await axios.get(`http://localhost:3000/login/${role}/${userEmail}`);
+      console.log("Login Response:", response);
+
       if (response.status === 200 && response.data.authorize === 'YES') {
-        login(); // Set user as authenticated
-        const user = await axios.get(`http://localhost:3000/user/${userEmail}`);
-        const id = user.data._id;
-        uid(id);
+        if (role === 'User') {
+          login(); // Set user as authenticated
+          const user = await axios.get(`http://localhost:3000/user/${userEmail}`);
+          const id = user.data._id;
+          uid(id); // Set the user ID in context
+          navigate('/'); // Redirect to user dashboard
+        } else if (role === 'Admin') {
+          loginAdmin(); // Set admin as authenticated
+          navigate('/home'); // Redirect to admin dashboard
+        }
       } else {
         alert("Unauthorized Access");
       }
     } catch (error) {
-      alert("unauthorized Access");
-      console.log("Error during email check:", error);
+      alert("Unauthorized Access");
+      console.error("Error during login:", error);
     }
-
-  };
-
-  useEffect(() => {
-    console.log('Updated userId:', userId);
-    console.log('ID type:', typeof userId);
-  }, [userId]);
-
-  const handleLoginSuccessAdmin = async(credentialResponse) => {
-    try {
-      console.log('Google Login Success:', credentialResponse);
-      const token = credentialResponse.credential;
-      const userInfo = jwtDecode(token); // Use jwtDecode
-      const userEmail = userInfo.email;
-      console.log("response")
-      const response = await axios.get(`http://localhost:3000/login/admin/${userEmail}`);
-      console.log(response)
-      if (response.status === 200 && response.data.authorize === 'YES') {
-        loginAdmin(); // Set user as authenticated
-        navigate('/users'); // Redirect to users page
-      } else {
-        alert("unauthorized Access");
-      }
-    } catch (error) {
-      alert("unauthorized Access");
-      console.log("Error during email check:", error);
-    }
-
-    // Here, you can handle the credential and send it to your server if needed
-    login();
-    // Redirect to /users after successful login
-    navigate('/users');
   };
 
   const handleLoginError = () => {
@@ -95,21 +68,25 @@ const SignInPage = () => {
     <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full">
         <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">Welcome Back!</h2>
+
+        {/* User Login */}
         <h2 className="text-2xl font-extrabold text-center text-gray-800 mb-8">Login As User</h2>
         <GoogleOAuthProvider clientId="526314418933-ai3uvq89emkiod12khrhn040vittie77.apps.googleusercontent.com">
           <GoogleLogin
-            onSuccess={handleLoginSuccess}
+            onSuccess={(credentialResponse) => handleLoginSuccess(credentialResponse, 'User')}
             onError={handleLoginError}
             theme="filled_blue"
             size="large"
             className="w-full bg-blue-600 text-white py-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none"
           />
         </GoogleOAuthProvider>
-        <br></br>
+
+        {/* Admin Login */}
+        <br />
         <h2 className="text-2xl font-extrabold text-center text-gray-800 mb-8">Login As Admin</h2>
         <GoogleOAuthProvider clientId="526314418933-ai3uvq89emkiod12khrhn040vittie77.apps.googleusercontent.com">
           <GoogleLogin
-            onSuccess={handleLoginSuccessAdmin}
+            onSuccess={(credentialResponse) => handleLoginSuccess(credentialResponse, 'Admin')}
             onError={handleLoginError}
             theme="filled_blue"
             size="large"
