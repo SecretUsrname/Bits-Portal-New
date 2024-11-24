@@ -81,7 +81,9 @@ const CreatePaperWithUser = () => {
   };
 
   return (
+    
     <div className="flex flex-col items-center p-8 bg-gray-100 min-h-screen">
+      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
       <button
         className="w-half py-3 px-6 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 align-right"
         type="button"
@@ -89,9 +91,8 @@ const CreatePaperWithUser = () => {
       >
           Back
       </button>
-      <br></br>
-      <br></br>
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
+        <br></br>
+        <br></br>
         <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">Create Paper</h2>
             <form onSubmit={handleSubmit} className="flex flex-col space-y-4 mt-4">
               <input
