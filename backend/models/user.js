@@ -1,7 +1,6 @@
-
 import mongoose from 'mongoose';
 
-const UserSchema = mongoose.Schema(
+const UserSchema = new mongoose.Schema(
     {
         email: {
             type: String,
@@ -11,24 +10,40 @@ const UserSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        role: {
+            type: String,
+            enum: ['User', 'Admin'], // Restrict to 'User' or 'Admin'
+            required: true,
+        },
         DOI: {
             type: [String],
-            required: true,
-            ref: 'Paper'
+            ref: 'Paper',
         },
         tagged_DOI: {
             type: [String],
-            required: true,
-            ref: 'Paper'
-        }
-
+            ref: 'Paper',
+        },
+        PSR: {
+            type: String,
+        },
+        DOB: {
+            type: Date,
+        },
+        PhoneNum: {
+            type: String,
+        },
+        chamberNum: {
+            type: String,
+        },
+        Dept: {
+            type: String,
+        },
     },
-
     {
-        timeStamp: true
+        timestamps: true, // Fixed typo: use `timestamps` instead of `timeStamp`
     }
 );
 
-const User = mongoose.model("User", UserSchema);
+const User = mongoose.model('User', UserSchema);
 
 export default User;
