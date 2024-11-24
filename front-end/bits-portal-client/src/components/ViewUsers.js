@@ -12,7 +12,7 @@ function ViewAllUsers() {
 
     // Fetch users when the component mounts
     useEffect(() => {
-        axios.get('http://localhost:3000/alluser')
+        axios.get('http://localhost:3000/allUsers')
             .then(response => {
                 setUsers(response.data); // Set the fetched users to state
             })
