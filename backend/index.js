@@ -36,7 +36,7 @@ const upload = multer({ storage });
 // Creating a new user or admin
 app.post('/user', async (req, res) => {
     try {
-        const { email, name, role, PSR, DOB, PhoneNum, chamberNum, Dept } = req.body;
+        const { email, name, role, PSR, officePhone, PhoneNum, chamberNum, Dept } = req.body;
 
         // Validate role
         if (!['User', 'Admin'].includes(role)) {
@@ -44,7 +44,7 @@ app.post('/user', async (req, res) => {
         }
 
         // Create user/admin based on role
-        const user = await User.create({ email, name, role, PSR, DOB, PhoneNum, chamberNum, Dept });
+        const user = await User.create({ email, name, role, PSR, officePhone, PhoneNum, chamberNum, Dept });
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -180,6 +180,31 @@ app.get('/user/:id/papers', async (req, res) => {
     } catch (error) {
       console.error('Error fetching papers:', error);
       res.status(500).json({ message: 'Error fetching papers' });
+    }
+  });
+
+  app.put('/user/update/:id', async (req, res) => {
+    try {
+      const { id } = req.params; // Get the user ID from the URL parameter
+      const updateData = req.body; // Get the new data to update from the request body
+  
+      // Find the user by ID and update the provided fields
+      const updatedUser = await User.findByIdAndUpdate(id, updateData, { 
+        new: true, // Return the updated document
+        runValidators: true // Ensure validation rules are applied
+      });
+  
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.status(200).json({
+        message: 'User updated successfully',
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Failed to update user', error: error.message });
     }
   });
   
