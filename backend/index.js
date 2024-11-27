@@ -1,4 +1,5 @@
 import express from 'express';
+import 'dotenv/config';
 import User from './models/user.js';
 import Paper from './models/paper.js';
 import Admin from './models/admin.js';
@@ -394,10 +395,10 @@ app.get('/:userid/:paperid/tagged/declined', async(req, res) => {
     }
 })
 
-mongoose.connect("mongodb+srv://f20220012:yNXnhFCr1niFyTiM@cluster0.gyzwh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("MongoDB connected.");
-        app.listen(3000, () => {
+        app.listen(process.env.PORT, () => {
             console.log('Testing...');
         });
     })
