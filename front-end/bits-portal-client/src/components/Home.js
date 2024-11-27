@@ -1,17 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { FaBars } from 'react-icons/fa';
+import { FaBars, FaPen } from 'react-icons/fa';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // For toggling edit mode on personal phone
+  const default_val = localStorage.getItem('style');
   const userId = localStorage.getItem('id');
+  const [citationStyle,setCitation] = useState(default_val|| 'APA'); // Citation style state
   const [user, setUser] = useState([]);
   const dp = localStorage.getItem('DP');
   console.log(dp);
   const navigate = useNavigate();
   const { logout } = useAuth();
+
+  const setCitationStyle = (value) => {
+    localStorage.setItem('style', value);
+    setCitation(value);   
+  };
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing); // Toggle edit mode
+  };
+
+  const handlePersonalNumberChange = (e) => {
+    setUser({ ...user, personalPhone: e.target.value });
+  };
 
   const navPapers = () => {
     console.log("papers")
@@ -27,11 +43,24 @@ const Home = () => {
     console.log("tags")
     navigate('/user/taggedpapers');
   };
-
+  
   const handlelogout = () => {
     logout();
   }
 
+  const handleEditSubmit = () => {
+    axios
+      .put(`http://localhost:3000/user/update/${user._id}`, user)
+      .then((response) => {
+        const updatedUser = response.data.user;
+        setUser(updatedUser);
+        alert('Profile updated successfully!');
+      })
+      .catch((error) => {
+        alert('Error updating profile.');
+        console.error('Error:', error);
+      });
+  };
   
   useEffect(() => {
     axios.get(`http://localhost:3000/user/byid/${userId}`)
@@ -42,6 +71,10 @@ const Home = () => {
             console.error('Error fetching user:', error);
         });
 }, []);
+const formatName = (fullName) => {
+    const nameParts = fullName.split(' ');
+    return fullName; // Return as-is if not in the expected format
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -76,19 +109,19 @@ const Home = () => {
           className="p-4 hover:bg-gray-700 cursor-pointer"
           onClick={() => navPapers()}
         >
-          papers
+          Journal Publications
         </li>
         <li
           className="p-4 hover:bg-gray-700 cursor-pointer"
           onClick={() => navCreatePaper()}
         >
-          Create paper
+          Create Journal Publications
         </li>
         <li
           className="p-4 hover:bg-gray-700 cursor-pointer"
           onClick={() => navTags()}
         >
-          taggedpapers
+          Tagged Journal Publications
         </li>
         <li
           className="p-4 hover:bg-gray-700 cursor-pointer"
@@ -113,55 +146,74 @@ const Home = () => {
         <br></br>
         <br></br>
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
-            My Profile
-          </h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
+          {user.name ? formatName(user.name) : 'User Profile'}
+        </h2>
+
 
           <div className="flex flex-wrap -mx-2">
             {/* Left Column */}
             <div className="w-full md:w-1/2 px-2 mb-4">
-              <label className="block text-gray-700">Full Name:</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded"
-                value= {user.name}
-              />
+              <div className="relative">
+                <label className="block text-gray-700">Email ID:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                  value={user.email}
+                  readOnly
+                />
+              </div>
 
-              <label className="block text-gray-700 mt-4">PSR</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={user.PSR}
-              />
+              <div className="relative mt-4">
+                <label className="block text-gray-700">Office Phone:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                  value={user.officePhone}
+                  readOnly
+                />
+              </div>
 
-              <label className="block text-gray-700 mt-4">Department</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={user.Dept}
-              />
+              <div className="relative mt-4">
+                <label className="block text-gray-700">Department:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                  value={user.Dept}
+                  readOnly
+                />
+              </div>
 
-              <label className="block text-gray-700 mt-4">Email</label>
-              <input
-                type="email"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={user.email}
-              />
+              <div className="relative mt-4">
+                <label className="block text-gray-700">Chamber Number:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                  value={user.chamberNum}
+                  readOnly
+                />
+              </div>
 
-              <label className="block text-gray-700 mt-4">Phone</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={user.PhoneNum}
-              />
-
-              <label className="block text-gray-700 mt-4">Chamber Number</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={user.chamberNum}
-              />
-
+              <div className="relative mt-4">
+                <label className="block text-gray-700">Personal Phone:</label>
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    className={`flex-grow p-2 border border-gray-300 rounded ${
+                      isEditing ? '' : 'bg-gray-100 cursor-not-allowed'
+                    }`}
+                    value={user.personalPhone || ''}
+                    onChange={handlePersonalNumberChange}
+                    readOnly={!isEditing}
+                  />
+                  <button
+                    className="ml-2 text-gray-500 hover:text-gray-800 focus:outline-none"
+                    onClick={toggleEdit}
+                  >
+                    <FaPen />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Right Column */}
@@ -176,10 +228,28 @@ const Home = () => {
                 </div>
               </div>
             </div>
-          </div>  
+          </div>
+            <label className="block mb-4">
+          <span className="text-gray-700">Citation Style:</span>
+          <select
+            value={citationStyle}
+            onChange={(e) => setCitationStyle(e.target.value)}
+            className="block text-gray-700 w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-300"
+          >
+            <option value="Default">APA</option>
+            <option value="Harvard">Harvard</option>
+            <option value="IEEE">IEEE</option>
+          </select>
+        </label>
+        <button
+            onClick={handleEditSubmit} // Call, not reference
+            className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
+          >
+            Save
+          </button>
+          </div>
         </div>
       </div>
-    </div>
   );
 };
 
