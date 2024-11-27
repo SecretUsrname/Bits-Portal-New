@@ -26,10 +26,10 @@ const UserSchema = new mongoose.Schema(
         PSR: {
             type: String,
         },
-        DOB: {
-            type: Date,
+        officePhone: {
+            type: String,
         },
-        PhoneNum: {
+        personalPhone: {
             type: String,
         },
         chamberNum: {
